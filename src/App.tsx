@@ -1,5 +1,141 @@
+import { useCallback, useState } from "react";
+import Header from "@/components/layout/Header.tsx";
+import SignIn from "@/components/sign-in/SignIn.tsx";
+import Footer from "@/components/layout/Footer.tsx";
+import MainContent from "@/components/layout/MainContent.tsx";
+import { Route, Routes } from "react-router-dom";
+import VideoTable from "@/components/video-table/VideoTable.tsx";
+import useAuth from "@/auth/useAuth.ts";
+
 function App() {
-  return <></>;
+  const [mailLink, setMailLink] = useState<string>("");
+  const { user, getAccessToken } = useAuth();
+
+  function wait(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  const createMailLink = useCallback(
+    async (id: string) => {
+      try {
+        const token = await getAccessToken();
+        if (!token) {
+          return;
+        }
+        const response = await fetch(
+          `https://ergopro-ecloud.equeo.de/rest/v1/videos/renditions/${id}`,
+          {
+            headers: {
+              Authorization: "Bearer " + token,
+            },
+          },
+        );
+
+        if (!response.ok) {
+          return "";
+        }
+        const result = await response.json();
+        const renditions = result.media_renditions;
+
+        if (renditions.length === 0) {
+          return "";
+        }
+
+        const videoRenditions = renditions.filter(
+          (r: { media_type: string }) => {
+            return r.media_type === "video";
+          },
+        );
+
+        if (videoRenditions.length === 0) {
+          return "";
+        }
+
+        const allVideosReady = videoRenditions.every(
+          (r: { delivery_url: string }) => {
+            return (
+              typeof r.delivery_url === "string" && r.delivery_url.trim() !== ""
+            );
+          },
+        );
+
+        if (!allVideosReady) {
+          return "";
+        }
+
+        const video = videoRenditions.sort(
+          (a: { height: number }, b: { height: number }) => b.height - a.height,
+        )[0];
+
+        const url = video.delivery_url.replace(
+          "cdn.jwplayer.com",
+          "cdn.equeo.de",
+        );
+
+        setMailLink(url);
+        return url;
+      } catch (e) {
+        console.error(e);
+        return "";
+      }
+    },
+    [getAccessToken],
+  );
+
+  async function pollForMailLink(
+    id: string,
+    maxAttempts = 1000,
+    delay = 5000,
+  ): Promise<string> {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      const mailUrl = await createMailLink(id);
+
+      if (mailUrl && mailUrl !== "") {
+        return mailUrl;
+      }
+      await wait(delay);
+    }
+    return "";
+  }
+
+  return (
+    <div className="flex flex-col gap-4 min-h-screen bg-white">
+      <Header />
+
+      {user !== null ? (
+        <Routes>
+          <Route
+            path="/upload"
+            element={
+              <MainContent
+                mailLink={mailLink}
+                pollForMailLink={pollForMailLink}
+              />
+            }
+          />
+
+          <Route
+            path="/videotable"
+            element={<VideoTable createMailLink={createMailLink} />}
+          />
+
+          <Route
+            path="*"
+            element={
+              <MainContent
+                mailLink={mailLink}
+                pollForMailLink={pollForMailLink}
+              />
+            }
+          />
+        </Routes>
+      ) : (
+        <SignIn />
+      )}
+
+      <Footer />
+    </div>
+  );
 }
 
 export default App;
