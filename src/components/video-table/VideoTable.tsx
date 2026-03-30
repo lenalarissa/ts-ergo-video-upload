@@ -1,5 +1,4 @@
 import VideoCard from "@/components/video-table/VideoCard.jsx";
-import handleDownloadQRCode from "@/utils/handleDownloadQRCode.ts";
 import useAuth from "@/auth/useAuth.js";
 import type { Video } from "@/types/video";
 import VideoTableHead from "@/components/video-table/VideoTableHead";
@@ -220,7 +219,6 @@ export default function VideoTable({ createMailLink }: VideoTableProps) {
                     qrCodeLinks={qrCodeLinks}
                     handleLoadMailLink={handleLoadMailLink}
                     handleGetQRCodeLink={handleGetQRCodeLink}
-                    handleDownloadQRCode={handleDownloadQRCode}
                     createAppLink={createAppLink}
                   />
                 </table>
@@ -239,7 +237,6 @@ export default function VideoTable({ createMailLink }: VideoTableProps) {
                 qrCodeLinks={qrCodeLinks}
                 handleLoadMailLink={handleLoadMailLink}
                 handleGetQRCodeLink={handleGetQRCodeLink}
-                handleDownloadQRCode={handleDownloadQRCode}
                 createAppLink={createAppLink}
               />
             ))}

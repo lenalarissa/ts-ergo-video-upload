@@ -9,6 +9,7 @@ import {
   createThumbnailLink,
 } from "@/utils/videoTableUtilities";
 import type { Video } from "@/types/video.ts";
+import handleDownloadQRCode from "@/utils/handleDownloadQRCode";
 
 type VideoCardProps = {
   video: Video;
@@ -17,10 +18,6 @@ type VideoCardProps = {
   qrCodeLinks: Record<string, string>;
   handleLoadMailLink: (videoId: string) => Promise<void>;
   handleGetQRCodeLink: (videoId: string) => Promise<void>;
-  handleDownloadQRCode: (
-    container: HTMLDivElement | null,
-    videoId: string,
-  ) => void;
   createAppLink: (videoId: string) => void;
 };
 
@@ -31,7 +28,6 @@ export default function VideoCard({
   qrCodeLinks,
   handleLoadMailLink,
   handleGetQRCodeLink,
-  handleDownloadQRCode,
   createAppLink,
 }: VideoCardProps) {
   const mailLink = mailLinks?.[video.id];
@@ -42,7 +38,7 @@ export default function VideoCard({
 
   const [open, setOpen] = useState(false);
 
-  const qrCodeRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const qrCodeRef = useRef<HTMLDivElement | null>(null);
 
   return (
     <div className="w-full rounded-xl border border-gray-200 bg-white shadow-sm my-2 mr-2 ">
@@ -152,7 +148,7 @@ export default function VideoCard({
             {qrCodeLink && (
               <div
                 ref={(el) => {
-                  if (el) qrCodeRefs.current[video.id] = el;
+                  if (el) qrCodeRef.current = el;
                 }}
                 className="flex items-center justify-between gap-3"
               >
@@ -160,10 +156,7 @@ export default function VideoCard({
                 <button
                   className="w-6 h-6 p-1 cursor-pointer"
                   onClick={() =>
-                    handleDownloadQRCode(
-                      qrCodeRefs.current[video.id] ?? null,
-                      video.id,
-                    )
+                    handleDownloadQRCode(qrCodeRef.current, video.id)
                   }
                   type="button"
                   aria-label="SVG herunterladen"
