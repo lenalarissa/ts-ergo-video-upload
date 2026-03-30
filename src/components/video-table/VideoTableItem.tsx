@@ -20,6 +20,9 @@ export default function VideoTableItem({
   const qrCodeRef = useRef<HTMLDivElement | null>(null);
 
   async function handleLoadMailLink(videoId: string): Promise<void> {
+    if (mailLink && mailLink !== "") {
+      return;
+    }
     try {
       const link = await createMailLink(videoId);
 
@@ -36,8 +39,16 @@ export default function VideoTableItem({
   }
 
   async function handleGetQRCodeLink(videoId: string): Promise<void> {
+    if (qrCodeLink && qrCodeLink !== "") {
+      return;
+    }
+    let link = mailLink;
+    if (link != "") {
+      setQrCodeLink(link);
+      return;
+    }
     try {
-      const link = await createMailLink(videoId);
+      link = await createMailLink(videoId);
 
       if (!link || link === "") {
         showNotice(
