@@ -1,10 +1,9 @@
-import VideoCard from "@/components/video-table/VideoCard.jsx";
-import handleDownloadQRCode from "@/utils/handleDownloadQRCode.ts";
 import useAuth from "@/auth/useAuth.js";
 import type { Video } from "@/types/video";
 import VideoTableHead from "@/components/video-table/VideoTableHead";
 import VideoTableBody from "@/components/video-table/VideoTableBody";
 import { useState, useEffect } from "react";
+import VideoTableItem from "./VideoTableItem";
 
 type VideoTableProps = {
   createMailLink: (id: string) => Promise<string>;
@@ -14,18 +13,15 @@ export default function VideoTable({ createMailLink }: VideoTableProps) {
   const { getAccessToken } = useAuth();
 
   const [videos, setVideos] = useState<Video[]>([]);
-  const [mailLinks, setMailLinks] = useState<Record<string, string>>({});
-  const [appLinks, setAppLinks] = useState<Record<string, string>>({});
-  const [qrCodeLinks, setQrCodeLinks] = useState<Record<string, string>>({});
 
   const [page, setPage] = useState<number>(1);
   const [totalVideos, setTotalVideos] = useState<number>(0);
-  const [notice, setNotice] = useState<string | null>(null);
 
   const [sortBy, setSortBy] = useState<string>("created");
   const [sortOrder, setSortOrder] = useState<string>("dsc");
   const [searchInput, setSearchInput] = useState<string>("");
   const [search, setSearch] = useState<string>("");
+  const [notice, setNotice] = useState<string>("");
 
   const pageSize = 50;
   const totalPages = Math.max(1, Math.ceil(totalVideos / pageSize));
@@ -103,70 +99,6 @@ export default function VideoTable({ createMailLink }: VideoTableProps) {
     }, 2500);
   }
 
-  async function handleLoadMailLink(videoId: string): Promise<void> {
-    if (mailLinks[videoId]) return;
-
-    try {
-      const link = await createMailLink(videoId);
-
-      if (!link || link === "") {
-        showNotice(
-          "Die Mail-Link-Generierung ist noch nicht abgeschlossen. Bitte versuchen Sie es in einigen Minuten erneut.",
-        );
-      }
-
-      setMailLinks((prev) => ({
-        ...prev,
-        [videoId]: link,
-      }));
-    } catch (e) {
-      console.error(e);
-      setMailLinks((prev) => ({
-        ...prev,
-        [videoId]: "",
-      }));
-    }
-  }
-
-  async function handleGetQRCodeLink(videoId: string): Promise<void> {
-    if (qrCodeLinks[videoId]) return;
-
-    let link = mailLinks[videoId];
-
-    if (!link) {
-      link = await createMailLink(videoId);
-    }
-    if (!link || link === "") {
-      showNotice(
-        "Die Mail-Link-Generierung ist noch nicht abgeschlossen. Bitte versuchen Sie es in einigen Minuten erneut.",
-      );
-    }
-
-    if (!link || link === "") return;
-    setQrCodeLinks((prev) => ({
-      ...prev,
-      [videoId]: link,
-    }));
-  }
-
-  function createAppLink(videoId: string): void {
-    if (appLinks[videoId]) return;
-
-    try {
-      const link = `https://cdn.equeo.de/manifests/${videoId}.m3u8`;
-      setAppLinks((prev) => ({
-        ...prev,
-        [videoId]: link,
-      }));
-    } catch (e) {
-      console.error(e);
-      setAppLinks((prev) => ({
-        ...prev,
-        [videoId]: "-",
-      }));
-    }
-  }
-
   return (
     <div className="flex flex-col h-full">
       {notice && (
@@ -215,13 +147,8 @@ export default function VideoTable({ createMailLink }: VideoTableProps) {
                   />
                   <VideoTableBody
                     videos={videos}
-                    mailLinks={mailLinks}
-                    appLinks={appLinks}
-                    qrCodeLinks={qrCodeLinks}
-                    handleLoadMailLink={handleLoadMailLink}
-                    handleGetQRCodeLink={handleGetQRCodeLink}
-                    handleDownloadQRCode={handleDownloadQRCode}
-                    createAppLink={createAppLink}
+                    createMailLink={createMailLink}
+                    showNotice={showNotice}
                   />
                 </table>
               </div>
@@ -231,16 +158,10 @@ export default function VideoTable({ createMailLink }: VideoTableProps) {
         <div className="w-full p-2 block lg:hidden">
           <div>
             {videos.map((video) => (
-              <VideoCard
-                key={video.id}
+              <VideoTableItem
                 video={video}
-                mailLinks={mailLinks}
-                appLinks={appLinks}
-                qrCodeLinks={qrCodeLinks}
-                handleLoadMailLink={handleLoadMailLink}
-                handleGetQRCodeLink={handleGetQRCodeLink}
-                handleDownloadQRCode={handleDownloadQRCode}
-                createAppLink={createAppLink}
+                createMailLink={createMailLink}
+                showNotice={showNotice}
               />
             ))}
           </div>

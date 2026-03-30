@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import copyIcon from "@/assets/kopieren-und-einfugen.svg";
 import downloadIcon from "@/assets/datei-download.svg";
@@ -9,40 +9,31 @@ import {
   createThumbnailLink,
 } from "@/utils/videoTableUtilities";
 import type { Video } from "@/types/video.ts";
+import handleDownloadQRCode from "@/utils/handleDownloadQRCode";
 
 type VideoCardProps = {
   video: Video;
-  mailLinks: Record<string, string>;
-  appLinks: Record<string, string>;
-  qrCodeLinks: Record<string, string>;
+  mailLink: string;
+  appLink: string;
+  qrCodeLink: string;
+  qrCodeRef: React.RefObject<HTMLDivElement | null>;
   handleLoadMailLink: (videoId: string) => Promise<void>;
   handleGetQRCodeLink: (videoId: string) => Promise<void>;
-  handleDownloadQRCode: (
-    container: HTMLDivElement | null,
-    videoId: string,
-  ) => void;
   createAppLink: (videoId: string) => void;
 };
 
 export default function VideoCard({
   video,
-  mailLinks,
-  appLinks,
-  qrCodeLinks,
+  mailLink,
+  appLink,
+  qrCodeLink,
+  qrCodeRef,
   handleLoadMailLink,
   handleGetQRCodeLink,
-  handleDownloadQRCode,
   createAppLink,
 }: VideoCardProps) {
-  const mailLink = mailLinks?.[video.id];
-  const appLink = appLinks?.[video.id];
-  const qrCodeLink = qrCodeLinks?.[video.id];
-
   const { formattedDate, formattedTime } = formatDateTime(video.created);
-
   const [open, setOpen] = useState(false);
-
-  const qrCodeRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   return (
     <div className="w-full rounded-xl border border-gray-200 bg-white shadow-sm my-2 mr-2 ">
@@ -151,19 +142,14 @@ export default function VideoCard({
             )}
             {qrCodeLink && (
               <div
-                ref={(el) => {
-                  if (el) qrCodeRefs.current[video.id] = el;
-                }}
+                ref={qrCodeRef}
                 className="flex items-center justify-between gap-3"
               >
                 <QRCodeSVG value={qrCodeLink} size={80} />
                 <button
                   className="w-6 h-6 p-1 cursor-pointer"
                   onClick={() =>
-                    handleDownloadQRCode(
-                      qrCodeRefs.current[video.id] ?? null,
-                      video.id,
-                    )
+                    handleDownloadQRCode(qrCodeRef.current, video.id)
                   }
                   type="button"
                   aria-label="SVG herunterladen"

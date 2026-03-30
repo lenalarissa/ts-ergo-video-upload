@@ -8,20 +8,17 @@ import {
   createThumbnailLink,
 } from "@/utils/videoTableUtilities.ts";
 import type { Video } from "@/types/video";
-import { useRef } from "react";
+import handleDownloadQRCode from "@/utils/handleDownloadQRCode";
+
 type VideoTableRowProps = {
   video: Video;
   mailLink?: string;
   appLink?: string;
   qrCodeLink?: string;
+  qrCodeRef: React.RefObject<HTMLDivElement | null>;
   handleLoadMailLink: (id: string) => Promise<void>;
   handleGetQRCodeLink: (id: string) => Promise<void>;
-  handleDownloadQRCode: (
-    container: HTMLDivElement | null,
-    videoId: string,
-  ) => void;
   createAppLink: (id: string) => void;
-  qrCodeRefs: React.MutableRefObject<Record<string, HTMLDivElement | null>>;
 };
 
 export default function VideoTableRow({
@@ -29,14 +26,11 @@ export default function VideoTableRow({
   mailLink,
   appLink,
   qrCodeLink,
+  qrCodeRef,
   handleLoadMailLink,
   handleGetQRCodeLink,
-  handleDownloadQRCode,
   createAppLink,
-  qrCodeRefs,
 }: VideoTableRowProps) {
-  const qrCodeRef = useRef<HTMLDivElement | null>(null);
-
   const title = video.metadata.title;
   const duration = convertDuration(video.duration);
   const created = formatDateTime(video.created);
@@ -142,9 +136,7 @@ export default function VideoTableRow({
             <QRCodeSVG value={qrCodeLink} size={80} />
             <button
               className="w-8 h-8 p-1 cursor-pointer"
-              onClick={() =>
-                handleDownloadQRCode(qrCodeRefs.current[video.id], video.id)
-              }
+              onClick={() => handleDownloadQRCode(qrCodeRef.current, video.id)}
               type="button"
               aria-label="SVG herunterladen"
             >
