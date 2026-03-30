@@ -10,26 +10,26 @@ import {
 } from "@/utils/videoTableUtilities";
 import type { Video } from "@/types/video.ts";
 import handleDownloadQRCode from "@/utils/handleDownloadQRCode";
+import useLinkGenerator from "@/hooks/UseLinkGenerator.tsx";
+import useGetMailLink from "@/hooks/UseGetMailLink.tsx";
 
 type VideoCardProps = {
   video: Video;
-  mailLinks: Record<string, string>;
-  appLinks: Record<string, string>;
-  qrCodeLinks: Record<string, string>;
-  handleLoadMailLink: (videoId: string) => Promise<void>;
-  handleGetQRCodeLink: (videoId: string) => Promise<void>;
-  createAppLink: (videoId: string) => void;
+  showNotice: (message: string) => void;
 };
 
-export default function VideoCard({
-  video,
-  mailLinks,
-  appLinks,
-  qrCodeLinks,
-  handleLoadMailLink,
-  handleGetQRCodeLink,
-  createAppLink,
-}: VideoCardProps) {
+export default function VideoCard({ video, showNotice }: VideoCardProps) {
+  const { getMailLink } = useGetMailLink();
+
+  const {
+    appLinks,
+    createAppLink,
+    mailLinks,
+    createMailLink,
+    qrCodeLinks,
+    createQRCodeLink,
+  } = useLinkGenerator({ getMailLink, showNotice });
+
   const mailLink = mailLinks?.[video.id];
   const appLink = appLinks?.[video.id];
   const qrCodeLink = qrCodeLinks?.[video.id];
@@ -109,7 +109,7 @@ export default function VideoCard({
               <button
                 type="button"
                 className="underline cursor-pointer hover:text-blue-400"
-                onClick={() => handleLoadMailLink(video.id)}
+                onClick={() => createMailLink(video.id)}
               >
                 anzeigen
               </button>
@@ -140,7 +140,7 @@ export default function VideoCard({
               <button
                 type="button"
                 className="underline cursor-pointer hover:text-blue-400"
-                onClick={() => handleGetQRCodeLink(video.id)}
+                onClick={() => createQRCodeLink(video.id)}
               >
                 anzeigen
               </button>

@@ -4,11 +4,12 @@ import useAuth from "@/auth/useAuth.js";
 import UploadProgress from "@/components/video-upload/UploadProgress.jsx";
 import SuccessfullUpload from "./SuccessfullUpload.js";
 import VideoProcessing from "./VideoProcessing.js";
+import useGetMail from "@/hooks/UseGetMailLink.tsx";
 
 type VideoUploadProps = {
   title: string;
   setAppLink: (link: string) => void;
-  pollForMailLink: (id: string) => Promise<string | null>;
+  setMailLink: (link: string) => void;
   setVideoId: (id: string | null) => void;
   setTitle: (title: string | null) => void;
 };
@@ -16,7 +17,7 @@ type VideoUploadProps = {
 export default function VideoUpload({
   title,
   setAppLink,
-  pollForMailLink,
+  setMailLink,
   setVideoId,
   setTitle,
 }: VideoUploadProps) {
@@ -28,6 +29,9 @@ export default function VideoUpload({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  const { getMailLink } = useGetMail();
+  const { pollForMailLink } = useGetMail();
 
   function onProgress(percent: number) {
     setUploadProgress(Math.round(percent));
@@ -73,6 +77,14 @@ export default function VideoUpload({
       const mailUrl = await pollForMailLink(id);
       if (mailUrl && mailUrl !== "") {
         setAppLink(`https://cdn.equeo.de/manifests/${id}.m3u8`);
+
+        try {
+          const mailLink = await getMailLink(id);
+          setMailLink(mailLink);
+        } catch (e) {
+          console.error(e);
+          setMailLink("");
+        }
         setVideoId(id);
         setIsUploading(false);
         setIsProcessing(false);
@@ -142,6 +154,7 @@ export default function VideoUpload({
     setUploadedVideo(null);
     setVideoId(null);
     setAppLink("");
+    setMailLink("");
     setIsUploading(false);
     setIsProcessing(false);
     setUploadProgress(0);

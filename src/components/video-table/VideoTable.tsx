@@ -5,17 +5,10 @@ import VideoTableHead from "@/components/video-table/VideoTableHead";
 import VideoTableBody from "@/components/video-table/VideoTableBody";
 import { useState, useEffect } from "react";
 
-type VideoTableProps = {
-  createMailLink: (id: string) => Promise<string>;
-};
-
-export default function VideoTable({ createMailLink }: VideoTableProps) {
+export default function VideoTable() {
   const { getAccessToken } = useAuth();
 
   const [videos, setVideos] = useState<Video[]>([]);
-  const [mailLinks, setMailLinks] = useState<Record<string, string>>({});
-  const [appLinks, setAppLinks] = useState<Record<string, string>>({});
-  const [qrCodeLinks, setQrCodeLinks] = useState<Record<string, string>>({});
 
   const [page, setPage] = useState<number>(1);
   const [totalVideos, setTotalVideos] = useState<number>(0);
@@ -102,70 +95,6 @@ export default function VideoTable({ createMailLink }: VideoTableProps) {
     }, 2500);
   }
 
-  async function handleLoadMailLink(videoId: string): Promise<void> {
-    if (mailLinks[videoId]) return;
-
-    try {
-      const link = await createMailLink(videoId);
-
-      if (!link || link === "") {
-        showNotice(
-          "Die Mail-Link-Generierung ist noch nicht abgeschlossen. Bitte versuchen Sie es in einigen Minuten erneut.",
-        );
-      }
-
-      setMailLinks((prev) => ({
-        ...prev,
-        [videoId]: link,
-      }));
-    } catch (e) {
-      console.error(e);
-      setMailLinks((prev) => ({
-        ...prev,
-        [videoId]: "",
-      }));
-    }
-  }
-
-  async function handleGetQRCodeLink(videoId: string): Promise<void> {
-    if (qrCodeLinks[videoId]) return;
-
-    let link = mailLinks[videoId];
-
-    if (!link) {
-      link = await createMailLink(videoId);
-    }
-    if (!link || link === "") {
-      showNotice(
-        "Die Mail-Link-Generierung ist noch nicht abgeschlossen. Bitte versuchen Sie es in einigen Minuten erneut.",
-      );
-    }
-
-    if (!link || link === "") return;
-    setQrCodeLinks((prev) => ({
-      ...prev,
-      [videoId]: link,
-    }));
-  }
-
-  function createAppLink(videoId: string): void {
-    if (appLinks[videoId]) return;
-
-    try {
-      const link = `https://cdn.equeo.de/manifests/${videoId}.m3u8`;
-      setAppLinks((prev) => ({
-        ...prev,
-        [videoId]: link,
-      }));
-    } catch (e) {
-      console.error(e);
-      setAppLinks((prev) => ({
-        ...prev,
-        [videoId]: "-",
-      }));
-    }
-  }
-
   return (
     <div className="flex flex-col h-full">
       {notice && (
@@ -212,15 +141,7 @@ export default function VideoTable({ createMailLink }: VideoTableProps) {
                     sortTable={sortTable}
                     getSortIndicator={getSortIndicator}
                   />
-                  <VideoTableBody
-                    videos={videos}
-                    mailLinks={mailLinks}
-                    appLinks={appLinks}
-                    qrCodeLinks={qrCodeLinks}
-                    handleLoadMailLink={handleLoadMailLink}
-                    handleGetQRCodeLink={handleGetQRCodeLink}
-                    createAppLink={createAppLink}
-                  />
+                  <VideoTableBody videos={videos} showNotice={showNotice} />
                 </table>
               </div>
             )}
@@ -229,16 +150,7 @@ export default function VideoTable({ createMailLink }: VideoTableProps) {
         <div className="w-full p-2 block lg:hidden">
           <div>
             {videos.map((video) => (
-              <VideoCard
-                key={video.id}
-                video={video}
-                mailLinks={mailLinks}
-                appLinks={appLinks}
-                qrCodeLinks={qrCodeLinks}
-                handleLoadMailLink={handleLoadMailLink}
-                handleGetQRCodeLink={handleGetQRCodeLink}
-                createAppLink={createAppLink}
-              />
+              <VideoCard key={video.id} video={video} showNotice={showNotice} />
             ))}
           </div>
         </div>

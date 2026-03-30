@@ -10,25 +10,33 @@ import {
 import type { Video } from "@/types/video";
 import { useRef } from "react";
 import handleDownloadQRCode from "@/utils/handleDownloadQRCode";
+import useLinkGenerator from "@/hooks/UseLinkGenerator.tsx";
+import useGetMailLink from "@/hooks/UseGetMailLink.tsx";
+
 type VideoTableRowProps = {
   video: Video;
-  mailLink?: string;
-  appLink?: string;
-  qrCodeLink?: string;
-  handleLoadMailLink: (id: string) => Promise<void>;
-  handleGetQRCodeLink: (id: string) => Promise<void>;
-  createAppLink: (id: string) => void;
+  showNotice: (message: string) => void;
 };
 
 export default function VideoTableRow({
   video,
-  mailLink,
-  appLink,
-  qrCodeLink,
-  handleLoadMailLink,
-  handleGetQRCodeLink,
-  createAppLink,
+  showNotice,
 }: VideoTableRowProps) {
+  const { getMailLink } = useGetMailLink();
+
+  const {
+    appLinks,
+    createAppLink,
+    mailLinks,
+    createMailLink,
+    qrCodeLinks,
+    createQRCodeLink,
+  } = useLinkGenerator({ getMailLink, showNotice });
+
+  const mailLink = mailLinks?.[video.id];
+  const appLink = appLinks?.[video.id];
+  const qrCodeLink = qrCodeLinks?.[video.id];
+
   const qrCodeRef = useRef<HTMLDivElement | null>(null);
 
   const title = video.metadata.title;
@@ -92,7 +100,7 @@ export default function VideoTableRow({
           <button
             type="button"
             className="underline cursor-pointer hover:text-blue-400"
-            onClick={() => handleLoadMailLink(video.id)}
+            onClick={() => createMailLink(video.id)}
           >
             anzeigen
           </button>
@@ -123,7 +131,7 @@ export default function VideoTableRow({
           <button
             type="button"
             className="underline cursor-pointer hover:text-blue-400"
-            onClick={() => handleGetQRCodeLink(video.id)}
+            onClick={() => createQRCodeLink(video.id)}
           >
             anzeigen
           </button>
