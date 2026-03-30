@@ -143,6 +143,7 @@ export default function VideoTable({ createMailLink }: VideoTableProps) {
     }
 
     if (!link || link === "") return;
+
     setQrCodeLinks((prev) => ({
       ...prev,
       [videoId]: link,
@@ -215,13 +216,8 @@ export default function VideoTable({ createMailLink }: VideoTableProps) {
                   />
                   <VideoTableBody
                     videos={videos}
-                    mailLinks={mailLinks}
-                    appLinks={appLinks}
-                    qrCodeLinks={qrCodeLinks}
-                    handleLoadMailLink={handleLoadMailLink}
-                    handleGetQRCodeLink={handleGetQRCodeLink}
-                    handleDownloadQRCode={handleDownloadQRCode}
-                    createAppLink={createAppLink}
+                    createMailLink={createMailLink}
+                    showNotice={showNotice}
                   />
                 </table>
               </div>
