@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build --mode=ergopro",
     "lint": "eslint .",
     "preview": "vite preview",
-    "build:ergopro:image": "scripts/buildContainer.bash ergopro registry.equeo.de/ergopro-videouploader:0.3.0"
+    "build:ergopro:volume": "scripts/buildVolumeImage.bash --domain ergopro-video-uploader.equeo.de --version 0.3.0"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.5",
